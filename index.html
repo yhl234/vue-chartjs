@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.css"
+			integrity="sha256-aa0xaJgmK/X74WM224KMQeNQC2xYKwlAt08oZqjeF0E="
+			crossorigin="anonymous"
+		/>
+		<link rel="stylesheet" href="style.css" />
+		<script
+			src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"
+			integrity="sha256-Uv9BNBucvCPipKQ2NS9wYpJmi8DTOEfTA/nH2aoJALw="
+			crossorigin="anonymous"
+		></script>
+		<script src="https://s3.amazonaws.com/stitch-sdks/js/bundles/4.6.0/stitch.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	</head>
+
+	<body>
+		<canvas id="myChart" width="400" height="200"></canvas>
+		<div id="app">
+			<main>
+				<button id="a" @click="vote('A')">A</button>
+				<button id="b" @click="vote('B')">B</button>
+				<button id="c" @click="vote('C')">C</button>
+				<button id="d" @click="vote('D')">D</button>
+			</main>
+		</div>
+	</body>
+	<script>
+		var ctx = document.getElementById("myChart").getContext("2d");
+		var myChart = new Chart(ctx, {
+			type: "doughnut",
+			data: {
+				labels: ["A", "B", "C", "D"],
+				datasets: [
+					{
+						label: "Ask the Audience",
+						data: [0, 0, 0, 0],
+						backgroundColor: [
+							"rgba(255, 99, 132, 0.2)",
+							"rgba(54, 162, 235, 0.2)",
+							"rgba(255, 206, 86, 0.2)",
+							"rgba(75, 192, 192, 0.2)"
+						],
+						borderColor: [
+							"rgba(255, 99, 132, 1)",
+							"rgba(54, 162, 235, 1)",
+							"rgba(255, 206, 86, 1)",
+							"rgba(75, 192, 192, 1)"
+						],
+						borderWidth: 1
+					}
+				]
+			},
+			options: {}
+		});
+
+		const db = {
+			client: null,
+			user: null,
+			init: async function() {
+				this.client = stitch.Stitch.initializeDefaultAppClient("poll-xexzd");
+
+				this.user = await this.client.auth.loginWithCredential(
+					new stitch.AnonymousCredential()
+				);
+			},
+			getPoll: async function() {
+				const result = await this.client.callFunction("pollResult");
+				console.log(result);
+
+				return result;
+			},
+			vote: async function(char) {
+				const result = await this.client.callFunction("voting", [char]);
+				console.log(result);
+			},
+			drop: async function() {
+				const result = await this.client.callFunction("reset");
+				console.log(result);
+			}
+		};
+
+		new Vue({
+			el: "#app",
+			async created() {
+				await db.init();
+				this.reset();
+				setInterval(() => this.getResults(), 2000);
+			},
+			methods: {
+				async getResults() {
+					const result = await db.getPoll();
+					const { A = 0, B = 0, C = 0, D = 0 } = result;
+					myChart.data.datasets[0].data = [A, B, C, D];
+					myChart.update();
+				},
+				vote(string) {
+					db.vote(string);
+				},
+				reset() {
+					db.drop();
+				}
+			}
+		});
+	</script>
+</html>

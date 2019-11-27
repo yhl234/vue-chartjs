@@ -1,0 +1,23 @@
+body {
+	background: transparent;
+	margin: 0 auto;
+}
+main {
+	margin-top: 3rem;
+}
+
+button {
+	cursor: pointer;
+	display: block;
+	justify-self: center;
+	font-size: 24px;
+	width: 100%;
+	padding: 40px 0;
+	color: #fff;
+	/* taken from https://uigradients.com/#Lawrencium */
+	background: #0f0c29;
+	/* fallback for old browsers */
+	background: -webkit-linear-gradient(to bottom, #24243e, #302b63, #0f0c29);
+	/* Chrome 10-25, Safari 5.1-6 */
+	background: linear-gradient(to bottom, #24243e, #302b63, #0f0c29);
+}
